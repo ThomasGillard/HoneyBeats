@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>HoneyBeats</title>
+    <meta charset="UTF-8">
+    <!--Library taken from https://github.com/flauwekeul/honeycomb-->
+    <script src="./Honeycomb.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.0.1/Tone.min.js"></script>
+    <script src="./HexagonTools.js"></script>
+    <script src="./SVG.js"></script>
+    <link href="./final.css" type="text/css" rel="stylesheet" />
+    <script>
+        window.onload = function () {
+
+            //Build the honeycomb
+            const draw = SVG(document.body);
+            const Hex = Honeycomb.extendHex({ size: 25, origin: [-25, -30], orientation: 'flat' });
+            const Grid = Honeycomb.defineGrid(Hex);
+            const corners = Hex().corners();
+            const hexGroup = draw.group()
+                .polygon(corners.map(({ x, y }) => `${x},${y}`))
+                .stroke({ width: 2, color: '#ffffff' })
+
+            Grid.rectangle({ width: 15, height: 8 }).forEach(hex => {
+                const { x, y } = hex.toPoint();
+                draw.use(hexGroup).translate(x, y).addClass("hex").id(hex);
+            })
+
+
+            //Select all of the hexes
+            let useElem = document.querySelectorAll('.hex');
+
+            //Prepare the queue 
+            let queue = [];
+
+            let count = 0;
+
+
+            for (let i = 0; i < useElem.length; i++) {
+                useElem[i].addEventListener("click", activate)
+            }
+
+            for (let i = 0; i < useElem.length; i++) {
+                useElem[i].addEventListener("contextmenu", toggle, false)
+            }
+
+            function toggle(event) {
+                event.preventDefault();
+                let hex = this;
+                if (hex.getAttribute("fill") === null || hex.getAttribute("fill") === "#000000") {
+                    hex.setAttribute("fill", "#FF88FF")
+                    hex.setAttribute("toggle", true)
+                } else if (hex.getAttribute("fill") === "#FF88FF") {
+                    hex.setAttribute("fill", "#00F9FF")
+                } else if (hex.getAttribute("fill") === "#00F9FF") {
+                    hex.setAttribute("fill", "#8BF982")
+                } else {
+                    hex.setAttribute("fill", "#000000")
+                    hex.removeAttribute("toggle");
+                }
+                console.log(hex);
+                return false;
+            }
+
+            //activate the first hex
+            function activate() {
+                for (let i = 0; i < useElem.length; i++) {
+                    useElem[i].removeAttribute('visited');
+                }
+
+                count = 20;
+                let hex = this
+                console.log(hex);
+                queue.push(hex);
+                hex.setAttribute('visited', 'true');
+
+                if (!hex.getAttribute('toggle')) {
+                    hex.setAttribute("fill", "#333333")
+                    setTimeout(function () {
+                        hex.setAttribute("fill", "#000000")
+                    }, 300)
+                    hex.setAttribute('visited', 'false')
+
+                } else {
+                    //if pink
+                    if (hex.getAttribute("fill") === "#FF88FF") {
+                        hex.setAttribute("fill", "#EF4AF4")
+                        makeSound("pink");
+                        setTimeout(function () {
+                            hex.setAttribute("fill", "#FF88FF")
+                        }, 300)
+                        //if blue
+                    } else if (hex.getAttribute("fill") === "#00F9FF") {
+                        hex.setAttribute("fill", "#3FB0EF")
+                        makeSound("blue");
+                        setTimeout(function () {
+                            hex.setAttribute("fill", "#00F9FF")
+                        }, 300)
+                        //if green
+                    } else {
+                        hex.setAttribute("fill", "#3EE52C")
+                        makeSound("green");
+                        setTimeout(function () {
+                            hex.setAttribute("fill", "#8BF982")
+                        }, 300)
+                    }
+                }
+
+                ripple(this.id)
+            }
+
+            function chain(array) {
+
+                for (let i = 0; i < array.length; i++) {
+
+                    let hex = document.getElementById(array[i]);
+
+                    if (!queue.includes(hex) && hex !== null && !hex.getAttribute('visited')) {
+
+                        hex.setAttribute('visited', 'true')
+                        queue.push(hex);
+
+                        if (!hex.getAttribute("toggle")) {
+                            setTimeout(function () {
+                                hex.setAttribute("fill", "#333333")
+                            }, 300)
+                            setTimeout(function () {
+                                hex.setAttribute("fill", "#000000")
+                            }, 500)
+                        } else {
+                            //if pink
+                            if (hex.getAttribute("fill") === "#FF88FF") {
+                                setTimeout(function(){
+                                    hex.setAttribute("fill", "#EF4AF4")
+                                },300)
+                                makeSound("pink");
+                                setTimeout(function () {
+                                    hex.setAttribute("fill", "#FF88FF")
+                                }, 500)
+                            //if blue
+                            } else if (hex.getAttribute("fill") === "#00F9FF") {
+                                setTimeout(function(){
+                                    hex.setAttribute("fill", "#3FB0EF")
+                                },300)
+                                makeSound("blue");
+                                setTimeout(function () {
+                                    hex.setAttribute("fill", "#00F9FF")
+                                }, 500)
+                            //if green
+                            } else {
+                                setTimeout(function(){
+                                    hex.setAttribute("fill", "#3EE52C");
+                                },300)
+                                makeSound("green");
+                                setTimeout(function () {
+                                    hex.setAttribute("fill", "#8BF982")
+                                }, 500)
+                            }
+                        }
+
+
+                    }
+
+
+                }
+
+                queue.shift();
+                count--;
+
+                let loop;
+
+                if (count > 0) {
+                    loop = setInterval(function () {
+                        if (queue.length > 0) {
+                            ripple(queue[0].id)
+                        } else {
+                            clearInterval(loop)
+                        }
+                    }, 250)
+                }
+
+
+            }
+
+            //Parses the hex's coordinates to find all neighbours and returns an array
+            function ripple(hexId) {
+
+                let coords = hexId.split(",");
+                let x = parseInt(coords[0])
+                let y = parseInt(coords[1])
+                let nw;
+                let n;
+                let ne;
+                let sw;
+                let s;
+                let se;
+
+
+
+                if (x % 2 === 0) {
+                    nw = (x - 1) + "," + (y - 1)
+                    n = x + "," + (y - 1);
+                    ne = (x + 1) + "," + (y - 1)
+                    sw = (x - 1) + "," + y
+                    s = x + "," + (y + 1)
+                    se = (x + 1) + "," + y;
+
+                } else {
+                    nw = (x - 1) + "," + y
+                    n = x + "," + (y - 1)
+                    ne = (x + 1) + "," + y
+                    sw = (x - 1) + "," + (y + 1)
+                    s = x + "," + (y + 1)
+                    se = (x + 1) + "," + (y + 1)
+                }
+
+                let dirArray = [nw, n, ne, sw, s, se];
+
+                chain(dirArray);
+
+
+            }
+
+            function makeSound(color) {
+                console.log(":)")
+
+                let synth;
+                if (color === "pink") {
+                    console.log(":(")
+                    synth = new Tone.AMSynth()
+                }else if(color === "blue"){
+                    synth = new Tone.MembraneSynth()
+                }else{
+                    synth = new Tone.PluckSynth();
+                }//const synth = new Tone.AMSynth()
+
+                //const synth = new Tone.MembraneSynth()
+                //const synth = new Tone.PluckSynth();
+                synth.toMaster();         
+
+                synth.triggerAttackRelease('C4', '32n');
+
+                setTimeout(function(){
+                    synth.dispose()
+                },500)
+                /* let notes = ['C4', 'E4', 'G4',
+                     'C5', 'G5', 'E5'
+                 ]
+ 
+                 let index = 0;
+ 
+                 Tone.Transport.scheduleRepeat(function (time) {
+                     repeat(time);
+                 }, "8n");
+ 
+                 function repeat(time){
+                     let note = notes[index % notes.length];
+                     synth.triggerAttackRelease(note, '8n', time);
+                     index++;
+ 
+ 
+                 }
+ 
+                 Tone.Transport.start();
+ 
+                 setTimeout()*/
+
+            }
+
+        };
+    </script>
+
+</head>
+
+<body>
+
+    <h1>HoneyBeats</h1>
+
+    <p>Left click to play, right click to toggle honey</p>
+
+</body>
+
+</html>

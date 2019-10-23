@@ -1,0 +1,17 @@
+body{
+    height:500px;
+    background: black;
+}
+
+
+.testclass{
+    fill:pink;
+}
+
+h1{
+    color:white;
+}
+
+p{
+    color:white;
+}

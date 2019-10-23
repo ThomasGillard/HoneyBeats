@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>HoneyBeats</title>
+    <meta charset="UTF-8">
+    <script src="./Honeycomb.js"></script>
+    <!--Library taken from https://github.com/flauwekeul/honeycomb-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="./HexagonTools.js"></script>
+    <script src="./SVG.js"></script>
+    <link href="./final.css" type="text/css" rel="stylesheet" />
+    <script>
+        window.onload = function () {
+
+            //const Hex = Honeycomb.extendHex({
+            //    size:30,
+            //    orientation: 'flat'
+            //})
+
+            //const Grid = Honeycomb.defineGrid(Hex);
+
+            //grid.neighborsOf()
+
+            //hexesInRange()
+
+            const draw = SVG(document.body);
+
+            const Hex = Honeycomb.extendHex({ size: 25, origin: [-25, -30], orientation: 'flat' });
+            const Grid = Honeycomb.defineGrid(Hex);
+            const corners = Hex().corners();
+            const hexGroup = draw.group()
+                .polygon(corners.map(({ x, y }) => `${x},${y}`))
+                //.fill('none')
+                .stroke({ width: 2, color: '#ffffff' })
+
+            Grid.rectangle({ width: 15, height: 8 }).forEach(hex => {
+                const { x, y } = hex.toPoint();
+                draw.use(hexGroup).translate(x, y).addClass("hex").id(hex);
+            })
+
+
+
+            let useElem = document.querySelectorAll('.hex');
+
+            /*for (let i = 0; i < useElem.length; i++) {
+                useElem[i].addEventListener("click", function (event) {
+                    console.log(useElem[i].id);
+                    useElem[i].setAttribute("fill", "#333333");
+                    setTimeout(function () {
+                        useElem[i].setAttribute("fill", "#000000");
+                    }, 800)
+                    ripple(useElem[i].id);
+                })
+            }*/
+
+            for (let i = 0; i < useElem.length; i++) {
+                useElem[i].addEventListener("click", activate)
+            }
+
+            //activate the first hex
+            function activate() {
+                let hex = this
+                hex.setAttribute("fill", "#333333")
+                setTimeout(function () {
+                    hex.setAttribute("fill", "#000000")
+                }, 800)
+                ripple(this.id)
+            }
+
+            //Chained hexagon activation
+            /* function chain(link) {
+                 let hex = document.getElementById(link);
+                 if (hex !== null) {
+                     console.log(hex.fill)
+ 
+                     if (hex.fill === "#000000" || hex.fill === undefined) {
+                         setTimeout(function () {
+                             hex.setAttribute("fill", "#333333")
+                         }, 300);
+                         setTimeout(function () {
+                             hex.setAttribute("fill", "#000000")
+                         }, 1100);
+                         
+                         
+                       // ripple(hex.id);
+                     }
+                 }
+             }*/
+
+            /*function ripple(hexId) {
+
+                let coords = hexId.split(",");
+                let x = parseInt(coords[0])
+                let y = parseInt(coords[1])
+                let nw;
+                let n;
+                let ne;
+                let sw;
+                let s;
+                let se;
+
+                if (x % 2 === 0) {
+                    nw = (x - 1) + "," + (y - 1)
+                    n = x + "," + (y - 1);
+                    ne = (x + 1) + "," + (y - 1)
+                    sw = (x - 1) + "," + y
+                    s = x + "," + (y + 1)
+                    se = (x + 1) + "," + y;
+
+                } else {
+                    nw = (x - 1) + "," + y
+                    n = x + "," + (y - 1)
+                    ne = (x + 1) + "," + y
+                    sw = (x - 1) + "," + (y + 1)
+                    s = x + "," + (y + 1)
+                    se = (x + 1) + "," + (y + 1)
+                }
+
+                chain(nw)
+                chain(n)
+                chain(ne)
+                chain(sw)
+                chain(s)
+                chain(se)
+
+            }*/
+
+
+            function chain(array) {
+
+                
+                for (let i = 0; i < array.length; i++) {
+                    
+                    let hex = document.getElementById(array[i]);
+                    if (hex !== null) {
+                        if (hex.fill === "#000000" || hex.fill === undefined) {
+                            setTimeout(function () {
+                                hex.setAttribute("fill", "#333333")
+                            }, 300);
+                            setTimeout(function () {
+                                hex.setAttribute("fill", "#000000")
+                            }, 1100);
+                        }
+                    }
+                }
+
+                
+
+
+            }
+
+            function ripple(hexId) {
+
+                let coords = hexId.split(",");
+                let x = parseInt(coords[0])
+                let y = parseInt(coords[1])
+                let nw;
+                let n;
+                let ne;
+                let sw;
+                let s;
+                let se;
+
+                if (x % 2 === 0) {
+                    nw = (x - 1) + "," + (y - 1)
+                    n = x + "," + (y - 1);
+                    ne = (x + 1) + "," + (y - 1)
+                    sw = (x - 1) + "," + y
+                    s = x + "," + (y + 1)
+                    se = (x + 1) + "," + y;
+
+                } else {
+                    nw = (x - 1) + "," + y
+                    n = x + "," + (y - 1)
+                    ne = (x + 1) + "," + y
+                    sw = (x - 1) + "," + (y + 1)
+                    s = x + "," + (y + 1)
+                    se = (x + 1) + "," + (y + 1)
+                }
+
+                let dirArray = [nw, n, ne, sw, s, se];
+                console.log(dirArray);
+
+                chain(dirArray)
+
+            }
+
+
+        };
+    </script>
+
+</head>
+
+<body>
+
+
+</body>
+
+</html>
